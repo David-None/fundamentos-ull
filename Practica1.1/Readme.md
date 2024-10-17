@@ -7,3 +7,7 @@
 14/10/24 Se añaden 1 archivo de texto y 1 imagen adicionales.
 
 ![Practica 1 1 paso 2](https://github.com/user-attachments/assets/10e3ebf0-9bce-477a-9072-8c34fc7a0184)
+
+17/10/24 Se añaden textura y script nuevos a la práctica 1.2
+
+![Practica1-1_Paso2](https://github.com/user-attachments/assets/77ba30a4-acd9-474b-8291-9383f8b2be64)
