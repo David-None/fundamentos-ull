@@ -77,4 +77,6 @@ Practica1.2/ProjectSettings/VFXManager.asset filter=lfs diff=lfs merge=lfs -text
 Practica1.2/ProjectSettings/VersionControlSettings.asset filter=lfs diff=lfs merge=lfs -text
 Practica1.2/ProjectSettings/XRSettings.asset filter=lfs diff=lfs merge=lfs -text
 Practica1.2/Readme.md
-
+*.txt filter=lfs diff=lfs merge=lfs -text
+*.vsconfig filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text

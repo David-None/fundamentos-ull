@@ -1,0 +1,3 @@
+repository "Practica1.3@DLuis@cloud"
+  path "/"
+    smartbranch "/main/Rama Secundaria"
