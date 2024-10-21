@@ -1,0 +1,4 @@
+repository "MovimientoRectilineo1@DLuis@cloud"
+  path "/"
+    br "/main"
+    co "/main"
