@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public int maxHealth;
+    private int health;
     public float baseSpeed;
     public float maxSpeed;
     public float jumpForce;
@@ -13,13 +15,10 @@ public class PlayerMovement : MonoBehaviour
     private bool isJumping;
     private int score = 0;
 
-    //public float timeUntilTired;
-    //private float timeToRecover = 8.0f;
-    //private float tiredCountdown;
-    //private bool tiredCountdownActive;
-
-    public TextMeshProUGUI UIText;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI healthText;
     public GameObject winPanel;
+    public GameObject losePanel;
     public GameObject ultraPanel;
 
     public InputActionAsset iAGrp;
@@ -32,9 +31,14 @@ public class PlayerMovement : MonoBehaviour
     private Animator thisAnimator;
     private SpriteRenderer thisSpriteRenderer;
 
-    
-    //private float inputY;
-    //private IEnumerator tiredCoroutine;
+    private AudioSource playerAudio;
+    private AudioSource stepsAudio;
+
+    public AudioClip jumpClip;
+    public AudioClip landClip;
+    public AudioClip collectClip;
+    public AudioClip loseHealthClip;
+    public AudioClip gainHealthClip;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -43,65 +47,14 @@ public class PlayerMovement : MonoBehaviour
         thisAnimator = GetComponent<Animator>();
         thisTransform =GetComponent<Transform>();
         thisRb = GetComponent<Rigidbody2D>();
+        playerAudio = GetComponent<AudioSource>();
+        stepsAudio = GetComponentInChildren<AudioSource>();
         move = iAGrp.FindAction("Move");
         jump = iAGrp.FindAction("Jump");
-        //tiredCoroutine = GetTired();
         speed = baseSpeed;
-        //tiredCountdown = timeUntilTired;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //Tomar input del jugador
-        //inputX = move.ReadValue<Vector2>().x;
-        //inputY = move.ReadValue<Vector2>().y;
-
-        //Mover al personaje
-        //Vector3 direction = new Vector3 (inputX, inputY, 0).normalized;
-        //transform.Translate(direction*speed*Time.deltaTime, Space.World);
-
-        //Setear parametros de la animacion
-        /*if (inputX > 0)
-        {
-            thisSpriteRenderer.flipX = true;
-        }
-        else if (inputX < 0) 
-        {
-            thisSpriteRenderer.flipX = false;
-        }
-        if (inputX == 0 && inputY == 0)
-        {
-            thisAnimator.SetBool("idle", true);
-        }
-        else
-        {
-            thisAnimator.SetBool("idle", false);
-        }
-        thisAnimator.SetFloat("inputX", inputX);
-        thisAnimator.SetFloat("inputY", inputY);*/
-
-        //Cambiar animacion despues de caminar cierta distancia
-        /*if (move.WasPressedThisFrame())
-        {            
-            tiredCountdownActive = true;
-        }
-        if (move.WasReleasedThisFrame())
-        {
-            tiredCountdownActive= false;
-            tiredCountdown = timeUntilTired;
-            thisAnimator.SetBool("tired", false);
-            speed = baseSpeed;
-        }
-        if (tiredCountdownActive)
-        {
-            tiredCountdown=tiredCountdown-Time.deltaTime;
-        }
-        if (tiredCountdown <= 0.0f)
-        {
-            thisAnimator.SetBool("tired", true);
-            speed = 0;
-        }*/
+        health = maxHealth;
+        healthText.text = "Salud: " + health.ToString();
+        scoreText.text = "Dulces recolectados: " + score.ToString();
     }
 
     private void FixedUpdate()
@@ -111,18 +64,19 @@ public class PlayerMovement : MonoBehaviour
 
         //Mover al personaje en horizontal
         Vector2 direction = new Vector2(inputX, 0).normalized;
-        //thisRb.MovePosition(thisRb.position+(direction * speed * Time.fixedTime));
         
+
         if (thisRb.linearVelocityX < maxSpeed)
         {
-            thisRb.AddForce(direction * speed);
-        }        
+            thisRb.AddForce(direction * speed);            
+        }
 
         //Salto
         if (jump.IsPressed() && !isJumping)
         {
             thisRb.AddForce(transform.up * jumpForce);
             isJumping = true;
+            playerAudio.PlayOneShot(jumpClip);
         }
 
         //Setear parametros de la animacion
@@ -147,11 +101,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (collision.gameObject.CompareTag("ground") && isJumping)
+        {
+            playerAudio.PlayOneShot(landClip);
+        }
+
         if (collision.gameObject.tag == "ground")
         {
             isJumping=false;
             thisRb.linearVelocity = new Vector2(thisRb.linearVelocityX, 0);
-        }
+        }        
 
         if (collision.gameObject.layer == LayerMask.NameToLayer("MovingPlatforms"))
         {
@@ -161,6 +120,17 @@ public class PlayerMovement : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("InvisiblePlatforms"))
         {
             collision.gameObject.GetComponent<SpriteRenderer>().enabled = true;
+        }
+
+        if (collision.gameObject.CompareTag("damager"))
+        {
+            health--;
+            healthText.text = "Salud: " + health.ToString();
+            playerAudio.PlayOneShot(loseHealthClip);
+            if (health <= 0)
+            {
+                losePanel.SetActive(true);
+            }
         }
     }
 
@@ -183,7 +153,14 @@ public class PlayerMovement : MonoBehaviour
         {
             Destroy(collision.gameObject);
             score++;
-            UIText.text = "Dulces recolectados: "+score.ToString();
+            playerAudio.PlayOneShot(collectClip);
+            scoreText.text = "Dulces recolectados: "+score.ToString();
+            if (health < maxHealth)
+            {
+                health++;
+                healthText.text = "Salud: "+health.ToString();
+                playerAudio.PlayOneShot(gainHealthClip);
+            }
             if (score >= 5)
             {
                 jumpForce = jumpForce * 1.5f;
